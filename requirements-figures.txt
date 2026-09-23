@@ -1,0 +1,5 @@
+# Optional helper dependencies; no validated minimum versions are claimed.
+python-pptx
+lxml
+# Windows PNG export additionally needs desktop PowerPoint and pywin32.
+pywin32; sys_platform == "win32"

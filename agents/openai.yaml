@@ -1,0 +1,4 @@
+interface:
+  display_name: "GRF Writing And Evaluation"
+  short_description: "起草、修改与评审 GRF 提案，绘制可编辑 PPTX 基金图并同步图 PDF"
+  default_prompt: "请使用 $grf-writing-and-evaluation，按我的要求写作、修改、评审 GRF 材料或绘制可编辑 PPTX 基金图；保持证据准确，改图后同步第一页图 PDF，不编译申请书。"
