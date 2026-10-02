@@ -34,6 +34,10 @@ Reuse one project editor and exporter when practical. Separate stable operations
 
 Preserve group transforms and schema ordering. Use unique shape IDs. When adding images, update media, slide relationships and content types together; verify every embed resolves before opening PowerPoint. Do not ban existing connectors merely because they are cxnSp elements.
 
+Do not reuse numeric collection indices across edits or PowerPoint saves. Re-identify targets in the current file by shape ID/name plus text, bounds and role; assert the expected match count before changing anything. A title's text and its empty background may be separate objects. Replace the complete obsolete result group, including score labels and backgrounds, rather than leaving duplicate text beneath new images. Compare the source hash before saving to avoid overwriting concurrent edits.
+
+For horizontal centerline alignment, choose a shared vertical center `cy` and set each object's `top = cy - height / 2`. Equal top coordinates do not align objects of unequal height. Check text vertical anchoring and paragraph margins as well as shape bounds, and inspect the exported title-row crop before claiming visual alignment. A successful save or one-page export is not evidence that a visual correction is complete.
+
 Cache extracted images by media identity/hash or by source snapshot plus shape ID; a reused shape ID or filename alone can silently select stale artwork after replacements. Keep content measurements separate from raster edits: inspect/measure bounds, then set native crops where possible.
 
 Native PowerPoint crop coordinates keep originals editable and avoid generating a new raster per crop. Check cropped evidence visually: scaling the bounding rectangle alone cannot correct an inconsistent viewport or source whitespace.
@@ -42,6 +46,13 @@ Use PowerPoint COM read-only, windowless open for export when available.
 ### PowerPoint COM session fallback
 
 On Windows, the preferred PDF exporter is PowerPoint COM with a read-only presentation and an explicit slide-1 print range. A restricted VS Code or plugin host can fail to create the COM desktop session with `0x80070520` (`A specified logon session does not exist`). When this occurs, rerun the same export script in the desktop/user session with the required execution authorization; do not change the PPTX or switch to unrestricted full-deck export. Keep the COM cleanup and shared PowerPoint safeguards below.
+
+Operational troubleshooting details from the GRF workflow:
+
+- If `PowerPoint.Application` exists but `Presentations.Open` returns no usable presentation object, do not report export success. Explicitly open the input PPTX in the desktop user session, then retry COM with the same file. Check `Slides.Count` before exporting.
+- PowerPoint COM enumeration values matter: `ExportAsFixedFormat` with an explicit `PrintRange` must use range type `ppPrintSlideRange = 4`; value `2` is not the explicit slide-range mode and can trigger “selected slides do not exist”. Create the range with `Presentation.PrintOptions.Ranges.Add(1,1)` and pass that range object to export.
+- Avoid passing integer `0` where an optional COM object is expected. Use the actual range object and suitable missing optional values. Do not set `.Visible` with a PowerShell boolean; MsoTriState uses integer values, and visibility is unnecessary for a windowless read-only open.
+- Export to a temporary PDF first, validate one page and the saved edit, then copy to the formal `figures/` path. The user's manual desktop PDF is a valid fallback when explicitly supplied: copy it to the requested `figures/` directory, not `assets/figures/`, and verify page count.
 
 When the destination PDF or preview does not exist yet, pass the output path directly to `ExportAsFixedFormat` or `Slides.Item(1).Export`; do not call `Resolve-Path` on the new output file. Use `Resolve-Path` only for existing input files. After export, verify that the PDF exists, contains exactly one page, and reflects the saved PPTX before replacing the formal figure PDF. Close only the presentation opened by the helper and release references in a finally block. Do not call Application.Quit on a potentially shared PowerPoint instance or kill PowerPoint processes. Respect environment permissions and applicable artifact-tool requirements. An export succeeding does not prove there are no overlaps.
 
@@ -54,3 +65,4 @@ Wait for the exporter to finish successfully before opening its PDF; do not mist
 Write export output to a temporary path and replace the figure PDF only after successful page-count verification. Keep an existing PDF intact if export fails, and label it as stale rather than describing it as updated. PNG preview export alone is not PDF synchronization. The bundled Python kit supplies PNG preview only; PDF export needs a separate available exporter.
 
 Before replacing formal files, confirm the source has not changed since the edit snapshot (for example, compare its hash). If it has, reapply the delta to the latest file. Promote the verified PPTX and its corresponding slide-1 PDF together.
+

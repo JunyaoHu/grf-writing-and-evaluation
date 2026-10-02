@@ -1,4 +1,4 @@
-# PPTX Academic Figure — Patterns
+﻿# PPTX Academic Figure — Patterns
 
 Generic layout recipes. Adapt module names/content to the paper; do not copy project-specific copy.
 
@@ -51,3 +51,4 @@ Grey placeholder = image slot only. Text chips and legends are not grey photo bl
 - Scale geometry without scaling fonts
 - Replace valid existing connectors without a task-specific reason
 - Add a redundant slide title unless requested
+
